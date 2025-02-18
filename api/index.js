@@ -59,9 +59,7 @@ app.get("/messages/:userId", async (req, res) => {
 	const messages = await Message.find({
 		sender: { $in: [userId, ourUserId] },
 		recipient: { $in: [userId, ourUserId] },
-	})
-		.sort({ createdAt: -1 })
-		.exec();
+	}).sort({ createdAt: 1 });
 	res.json(messages);
 });
 
@@ -79,6 +77,11 @@ app.get("/profile", (req, res) => {
 
 		res.json({ userId: userData.userId, username: userData.username }); // ✅ Send expected user data
 	});
+});
+
+app.get("/people", async (req, res) => {
+	const users = await UserModel.find({}, { _id: 1, username: 1 });
+	res.json(users);
 });
 
 app.post("/register", async (req, res) => {
@@ -151,6 +154,35 @@ const wss = new ws.WebSocketServer({ server });
 wss.on("connection", (connection, req) => {
 	console.log("wss command recieved");
 
+	function notifyAboutOnlinePeople() {
+		[...wss.clients].forEach((client) => {
+			client.send(
+				JSON.stringify({
+					online: [...wss.clients].map((c) => ({
+						userId: c.userId,
+						username: c.username,
+					})),
+				})
+			);
+		});
+	}
+
+	connection.isAlive = true;
+
+	connection.timer = setInterval(() => {
+		connection.ping();
+		connection.deathTimer = setTimeout(() => {
+			connection.isAlive = false;
+			connection.terminate();
+			notifyAboutOnlinePeople();
+			console.log("dead");
+		}, 1000);
+	}, 5000);
+
+	connection.on("pong", () => {
+		clearTimeout(connection.deathTimer);
+	});
+
 	// read username an did from the cookie for this connection
 	const cookies = req.headers.cookie;
 	if (cookies) {
@@ -192,7 +224,7 @@ wss.on("connection", (connection, req) => {
 						JSON.stringify({
 							text,
 							sender: connection.userId,
-							id: messageDoc._id,
+							_id: messageDoc._id,
 							recipient,
 						})
 					)
@@ -202,15 +234,9 @@ wss.on("connection", (connection, req) => {
 
 	// notify everyone about online people (when someone connects)
 	//console.log([...wss.clients].map((c) => c.username));
+	notifyAboutOnlinePeople();
+});
 
-	[...wss.clients].forEach((client) => {
-		client.send(
-			JSON.stringify({
-				online: [...wss.clients].map((c) => ({
-					userId: c.userId,
-					username: c.username,
-				})),
-			})
-		);
-	});
+wss.on("close", (data) => {
+	console.log("disconnected", data);
 });

@@ -1,4 +1,4 @@
-function Avatar({ userId, username }) {
+function Avatar({ userId, username, online }) {
 	const colors = [
 		"bg-red-200",
 		"bg-green-200",
@@ -14,10 +14,15 @@ function Avatar({ userId, username }) {
 	const color = colors[colorIndex];
 
 	return (
-		<div
-			className={`w-8 h-8 ${color} rounded-full flex items-center justify-center`}
-		>
+		<div className={`w-8 h-8 ${color} relative rounded-full flex items-center`}>
 			<div className="text-center w-full opacity-70">{username[0]}</div>
+
+			{online && (
+				<div className="absolute w-3 h-3 bg-green-500 bottom-0 right-0 rounded-full border border-white"></div>
+			)}
+			{!online && (
+				<div className="absolute w-3 h-3 bg-gray-500 bottom-0 right-0 rounded-full border border-white"></div>
+			)}
 		</div>
 	);
 }

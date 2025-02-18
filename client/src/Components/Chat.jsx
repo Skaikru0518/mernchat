@@ -4,10 +4,12 @@ import Logo from "./Logo.jsx";
 import { UserContext } from "./UserContext.jsx";
 import { uniqBy } from "lodash";
 import axios from "axios";
+import Contact from "./Contact.jsx";
 
 function Chat() {
 	const [ws, setWs] = useState(null);
 	const [onlinePeople, setOnlinePeople] = useState({});
+	const [offlinePeople, setOfflinePeople] = useState({});
 	const [selectedUserId, setSelectedUserId] = useState(null);
 	const { username, id } = useContext(UserContext);
 	const [newMessageText, setNewMessageText] = useState("");
@@ -61,17 +63,33 @@ function Chat() {
 			})
 		);
 		setNewMessageText("");
-
+		console.log("new message sent");
 		setMessages((prev) => [
 			...prev,
 			{
 				text: newMessageText,
 				sender: id,
 				recipient: selectedUserId,
-				id: Date.now(),
+				_id: Date.now(),
 			},
 		]);
 	}
+
+	function Logout() {}
+
+	useEffect(() => {
+		axios.get("/people").then((res) => {
+			const offlinePeopleArray = res.data
+				.filter((p) => p._id !== id)
+				.filter((p) => !Object.keys(onlinePeople).includes(p._id));
+			const offlinePeople = {};
+			offlinePeopleArray.forEach((p) => {
+				offlinePeople[p._id] = p;
+			});
+			setOfflinePeople(offlinePeople);
+			console.log(offlinePeople);
+		});
+	}, [onlinePeople]);
 
 	useEffect(() => {
 		const div = divUnderMessages.current;
@@ -83,37 +101,53 @@ function Chat() {
 
 	useEffect(() => {
 		if (selectedUserId) {
-			axios.get("/messages/" + selectedUserId);
+			axios.get("/messages/" + selectedUserId).then((res) => {
+				console.log(res.data);
+				setMessages(res.data);
+			});
 		}
 	}, [selectedUserId]);
 
-	const messagesWithoutDupes = uniqBy(messages, "id");
+	const messagesWithoutDupes = uniqBy(messages, "_id");
 
 	return (
 		<div className="flex h-screen">
-			<div className="bg-white w-1/3">
-				<Logo />
-				<div className="text-blue-600 font-bold border text-center py-2">
-					<div>Welcome, {username}!</div>
-				</div>
-				{Object.keys(onlinePeopleExcludingOurUser).map((userId) => (
-					<div
-						key={userId}
-						onClick={() => setSelectedUserId(userId)}
-						className={
-							"border-b border-gray-100  flex items-center gap-2 cursor-pointer" +
-							(userId === selectedUserId ? " bg-blue-50" : "")
-						}
-					>
-						{userId === selectedUserId && (
-							<div className="w-1 bg-blue-500 h-12 rounded-r-md"></div>
-						)}
-						<div className="flex gap-2 items-center py-2 pl-4">
-							<Avatar username={onlinePeople[userId]} userId={userId} />
-							<span className="text-gray-800">{onlinePeople[userId]}</span>
-						</div>
+			<div className="bg-white w-1/3 flex flex-col">
+				<div className="flex-grow">
+					<Logo />
+					<div className="text-blue-600 font-bold border text-center py-2">
+						<div>Welcome, {username}!</div>
 					</div>
-				))}
+					{Object.keys(onlinePeopleExcludingOurUser).map((userId) => (
+						<Contact
+							key={userId}
+							id={userId}
+							online={true}
+							username={onlinePeopleExcludingOurUser[userId]}
+							onClick={() => setSelectedUserId(userId)}
+							selected={userId === selectedUserId}
+						/>
+					))}
+					{Object.keys(offlinePeople).map((userId) => (
+						<Contact
+							key={userId}
+							id={userId}
+							online={false}
+							username={offlinePeople[userId].username}
+							onClick={() => setSelectedUserId(userId)}
+							selected={userId === selectedUserId}
+						/>
+					))}
+				</div>
+
+				<div className="p-2 text-center">
+					<button
+						onClick={Logout}
+						className="text-sm text-gray-500 bg-blue-100 py-1 px-2 border rounded-sm"
+					>
+						Logout
+					</button>
+				</div>
 			</div>
 			<div className="bg-blue-200 w-2/3 p-2 flex flex-col">
 				<div className="flex-grow">
@@ -129,6 +163,7 @@ function Chat() {
 							<div className="overflow-y-auto absolute top-0 left-0 right-0 bottom-2">
 								{messagesWithoutDupes.map((message) => (
 									<div
+										key={message._id}
 										className={
 											message.sender === id ? "text-right" : "text-left"
 										}
@@ -141,8 +176,6 @@ function Chat() {
 													: "bg-white text-gray-500")
 											}
 										>
-											sender: {message.sender} <br />
-											my id is: {id} <br />
 											{message.text}
 										</div>
 									</div>
