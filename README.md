@@ -85,5 +85,5 @@ MERNChat uses the WebSocket API instead of Socket.IO for real-time communication
       │       └── App.js      # Main React component
       └── README.md           # Project documentation
 
-###📜 License
+## 📜 License
 This project is licensed under the MIT License. See the LICENSE file for details.
