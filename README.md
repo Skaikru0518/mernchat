@@ -19,25 +19,33 @@ MERNChat is a full-stack real-time chat application built using the MERN (MongoD
 - **Authentication**: JSON Web Tokens (JWT)
 
 ## Staring the project:
+
 1. Create a .env in /api
+
    ```text
    PORT = 4000
    MONGO_URL: 'your_mongo_db_connection_url' // 'mongodb+srv://<username:password>.....
    JWT_SECRET: 'YOUR_JWT_SECRET'
    CLIENT_URL: 'hhtp://localhost:5173' // vite frontend url
 
+   ```
+
 2. Start backend
+
    - navigate to /api/ and run
    - by default it will run on localhost:PORT (from .env)
-    ```bash
-    node index.js
+
+   ```bash
+   node index.js
+
+   ```
 
 3. Start frontend
-    - navigate to /client/ and run
-    - by default it will run on localhost:5173
-    ```bash
-    npm run dev
-
+   - navigate to /client/ and run
+   - by default it will run on localhost:5173
+   ```bash
+   npm run dev
+   ```
 
 ## 💬 Usage
 
@@ -49,14 +57,13 @@ MERNChat is a full-stack real-time chat application built using the MERN (MongoD
 - Send text messages, share files, and images.
 - View typing indicators and receive real-time notifications.
 
-
 ## 🔗 Real-Time Communication (WebSockets)
+
 MERNChat uses the WebSocket API instead of Socket.IO for real-time communication. The WebSocket connection allows bi-directional messaging between the client and the server.
 
 1. Frontend: Uses the WebSocket constructor to establish a persistent connection with the backend.
 
 2. Backend: Uses the native ws WebSocket library to handle incoming connections and messages.
-
 
 ## 📁 Folder Structure
 
@@ -78,5 +85,5 @@ MERNChat uses the WebSocket API instead of Socket.IO for real-time communication
       │       └── App.js      # Main React component
       └── README.md           # Project documentation
 
-
-
+###📜 License
+This project is licensed under the MIT License. See the LICENSE file for details.
