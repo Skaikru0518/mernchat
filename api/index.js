@@ -3,16 +3,21 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import fs from "fs";
 import bcrypt from "bcryptjs";
 import * as ws from "ws";
 import { UserModel } from "./models/User.js";
 import { MessageModel } from "./models/Message.js";
 import jsonwebtoken from "jsonwebtoken";
+import { fileURLToPath } from "url";
+import path from "path";
 
 //imports from .env and app settings
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(
 	cors({
@@ -22,6 +27,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+app.use("/uploads", express.static(__dirname + "/uploads"));
 
 const User = UserModel;
 const Message = MessageModel;
@@ -144,6 +150,10 @@ app.post("/login", async (req, res) => {
 	);
 });
 
+app.post("/logout", (req, res) => {
+	res.cookie("token", "", { sameSite: "none", secure: true }).json("ok");
+});
+
 const server = app.listen(PORT, () => {
 	console.log(`Server is running on: https://localhost:${PORT}`);
 });
@@ -173,6 +183,7 @@ wss.on("connection", (connection, req) => {
 		connection.ping();
 		connection.deathTimer = setTimeout(() => {
 			connection.isAlive = false;
+			clearInterval(connection.timer);
 			connection.terminate();
 			notifyAboutOnlinePeople();
 			console.log("dead");
@@ -209,14 +220,27 @@ wss.on("connection", (connection, req) => {
 
 	connection.on("message", async (message) => {
 		const messageData = JSON.parse(message.toString());
-		const { recipient, text } = messageData;
-		if (recipient && text) {
+		const { recipient, text, file } = messageData;
+		let filename = null;
+		if (file) {
+			console.log("size", file.data.length);
+			const parts = file.name.split(".");
+			const ext = parts[parts.length - 1];
+			filename = Date.now() + "." + ext;
+			const filePath = path.join(__dirname, "uploads", filename);
+			const bufferData = new Buffer(file.data.split(",")[1], "base64");
+			fs.writeFile(filePath, bufferData, () => {
+				console.log("file saved:" + filePath);
+			});
+		}
+		if (recipient && (text || file)) {
 			const messageDoc = await Message.create({
 				sender: connection.userId,
 				recipient,
 				text,
+				file: file ? filename : null,
 			});
-
+			console.log("created message");
 			[...wss.clients]
 				.filter((c) => c.userId === recipient)
 				.forEach((c) =>
@@ -224,8 +248,9 @@ wss.on("connection", (connection, req) => {
 						JSON.stringify({
 							text,
 							sender: connection.userId,
-							_id: messageDoc._id,
 							recipient,
+							file: file ? filename : null,
+							_id: messageDoc._id,
 						})
 					)
 				);

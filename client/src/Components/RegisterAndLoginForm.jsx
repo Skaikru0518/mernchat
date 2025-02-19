@@ -5,7 +5,7 @@ import { UserContext } from "./UserContext.jsx";
 function RegisterAndLoginForm() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
-	const [isLoginOrRegister, setIsLoginOrRegister] = useState("register");
+	const [isLoginOrRegister, setIsLoginOrRegister] = useState("login");
 	// prettier-ignore
 	const { setUsername:setLoggedInUsername, setId } = useContext(UserContext);
 
@@ -43,7 +43,7 @@ function RegisterAndLoginForm() {
 				<div className="text-center mt-2">
 					{isLoginOrRegister === "register" && (
 						<div>
-							Already member?
+							Already member? <br />
 							<button onClick={() => setIsLoginOrRegister("login")}>
 								Login here
 							</button>
@@ -51,7 +51,7 @@ function RegisterAndLoginForm() {
 					)}
 					{isLoginOrRegister === "login" && (
 						<div>
-							Dont have an account?
+							Dont have an account? <br />
 							<button onClick={() => setIsLoginOrRegister("register")}>
 								Register here
 							</button>
