@@ -1,3 +1,4 @@
+
 # MERNChat
 
 MERNChat is a full-stack real-time chat application built using the MERN (MongoDB, Express.js, React.js, Node.js) stack. It enables users to engage in seamless one-on-one and group conversations with features like real-time messaging, user authentication, and more.
@@ -88,3 +89,6 @@ MERNChat uses the WebSocket API instead of Socket.IO for real-time communication
 ## 📜 License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+[![wakatime](https://wakatime.com/badge/user/52037f33-eae0-4011-9485-0d1b273392c2/project/2ad376a6-d732-46b8-9905-b150dda98ee1.svg)](https://wakatime.com/badge/user/52037f33-eae0-4011-9485-0d1b273392c2/project/2ad376a6-d732-46b8-9905-b150dda98ee1)
+
